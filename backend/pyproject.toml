@@ -1,0 +1,22 @@
+# backend/pyproject.toml
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "airport-maintenance-backend"
+version = "0.1.0"
+description = "Backend for Airport Maintenance Request System"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.115.0",      # Web-фреймворк + uvicorn
+    "sqlalchemy[asyncio]>=2.0.36",     # ORM с асинхронной поддержкой
+    "asyncpg>=0.30.0",                 # Асинхронный драйвер для PostgreSQL
+    "alembic>=1.14.0",                 # Миграции БД
+    "pgvector>=0.3.6",                 # Поддержка векторов в SQLAlchemy
+    "pydantic-settings>=2.7.0",        # Управление конфигами из .env
+    "python-dotenv>=1.0.1",            # Чтение .env файлов
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
