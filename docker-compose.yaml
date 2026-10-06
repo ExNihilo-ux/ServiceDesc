@@ -39,6 +39,9 @@ services:
       - app-network
     ports:
       - "${BACKEND_PORT}:${BACKEND_PORT}"
+    volumes:
+      # Bind-mount папки sql внутрь контейнера
+      - ./backend/sql:/app/sql
 
 volumes:
   postgres_data:
