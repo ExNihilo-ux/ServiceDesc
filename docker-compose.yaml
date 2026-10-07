@@ -42,6 +42,7 @@ services:
     volumes:
       # Bind-mount папки sql внутрь контейнера
       - ./backend/sql:/app/sql
+      - ./backend/alembic/versions:/app/alembic/versions
 
 volumes:
   postgres_data:
