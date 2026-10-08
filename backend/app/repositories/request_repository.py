@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Optional
 
 import asyncpg
+import json
 
 
 @dataclass
@@ -54,3 +55,22 @@ class RequestRepository:
             status=row["out_status"],
             created_at=row["out_created_at"],
         )
+
+    async def find_similar(
+        self,
+        embedding: list[float] | None,
+        threshold: float = 0.7,
+        limit: int = 5,
+    ) -> list[dict]:
+        """Поиск похожих заявок через векторное сходство."""
+        if embedding is None:
+            return []
+
+        embedding_json = json.dumps(embedding)
+    
+        query = """
+            SELECT request_id, title, similarity 
+            FROM find_similar_requests($1::vector, $2, $3)
+        """
+        rows = await self._conn.fetch(query, embedding_json, threshold, limit)
+        return [dict(r) for r in rows]
