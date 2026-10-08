@@ -9,7 +9,7 @@ class TestCreateRequestEndpoint:
 
     @pytest.mark.asyncio
     async def test_create_request_success(self):
-        """Успешное создание заявки возвращает 200 и UUID."""
+        """Успешное создание заявки возвращает 200 и корректный DTO."""
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.post(
@@ -25,9 +25,15 @@ class TestCreateRequestEndpoint:
 
         assert response.status_code == 200
         data = response.json()
-        assert "out_id" in data
-        assert len(data["out_id"]) == 36
-        assert data["out_title"] == "E2E Test Request"
+        
+        assert "id" in data
+        assert len(data["id"]) == 36 
+        assert data["title"] == "E2E Test Request"
+        assert data["description"] == "Testing full HTTP cycle"
+        assert data["status"] == "new"
+        assert data["category_id"] == 1
+        assert data["assignee_id"] == 1
+        assert "created_at" in data
 
     @pytest.mark.asyncio
     async def test_create_request_invalid_status(self):

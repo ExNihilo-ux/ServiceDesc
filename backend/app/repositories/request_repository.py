@@ -1,76 +1,27 @@
 # backend/app/repositories/request_repository.py
-from dataclasses import dataclass
-from datetime import datetime
 from typing import Optional
-
 import asyncpg
-import json
 
-
-@dataclass
-class RequestResult:
-    """Соответствует RETURNS TABLE(out_id, out_title, out_status, out_created_at)."""
-    id: str
-    title: str
-    status: str
-    created_at: datetime
+from .impl._crud import _RequestCrudRepo, RequestRecord
+from .impl._search import _RequestSearchRepo, SimilarRequest
 
 
 class RequestRepository:
-    """Репозиторий заявок через SQL-функции БД."""
+    """Единая точка входа для работы с заявками.
+    
+    Делегирует операции специализированным внутренним репозиториям.
+    Роутеры и сервисы работают ТОЛЬКО с этим классом.
+    """
 
     def __init__(self, conn: asyncpg.Connection):
-        self._conn = conn
+        self._crud = _RequestCrudRepo(conn)
+        self._search = _RequestSearchRepo(conn)
 
-    async def create_or_update(
-        self,
-        title: str,
-        description: str,
-        status: str,
-        category_id: int,
-        assignee_id: int,
-        request_id: Optional[str] = None,
-    ) -> RequestResult:
-        query = """
-            SELECT * FROM upsert_request(
-                $1, $2, $3::request_status, $4, $5, $6
-            )
-        """
-        row = await self._conn.fetchrow(
-            query,
-            title,
-            description,
-            status,
-            category_id,
-            assignee_id,
-            request_id,
-        )
+    async def create_or_update(self, **kwargs) -> RequestRecord:
+        return await self._crud.upsert(**kwargs)
 
-        if row is None:
-            raise ValueError("upsert_request returned no rows")
+    async def get_by_id(self, request_id: str) -> Optional[RequestRecord]:
+        return await self._crud.get_by_id(request_id)
 
-        return RequestResult(
-            id=row["out_id"],
-            title=row["out_title"],
-            status=row["out_status"],
-            created_at=row["out_created_at"],
-        )
-
-    async def find_similar(
-        self,
-        embedding: list[float] | None,
-        threshold: float = 0.7,
-        limit: int = 5,
-    ) -> list[dict]:
-        """Поиск похожих заявок через векторное сходство."""
-        if embedding is None:
-            return []
-
-        embedding_json = json.dumps(embedding)
-    
-        query = """
-            SELECT request_id, title, similarity 
-            FROM find_similar_requests($1::vector, $2, $3)
-        """
-        rows = await self._conn.fetch(query, embedding_json, threshold, limit)
-        return [dict(r) for r in rows]
+    async def find_similar(self, **kwargs) -> list[SimilarRequest]:
+        return await self._search.find_similar(**kwargs)
