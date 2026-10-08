@@ -1,12 +1,12 @@
 # backend/tests/e2e/conftest.py
 import os
 import pytest
+from httpx import AsyncClient, ASGITransport
 
 from app.main import app
 from app.core.database import get_db_manager
 from app.settings.database import DatabaseSettings
-# Импортируем саму функцию зависимости из роутера
-from app.api.v1.requests import get_db 
+from app.api.v1.dependencies import get_db
 
 
 @pytest.fixture(autouse=True)
@@ -32,6 +32,15 @@ async def init_db_for_e2e():
     
     yield
     
-    # Очищаем override после теста, чтобы не сломать другие тесты
+    # Очищаем override после теста
     app.dependency_overrides.clear()
     await db.close_pool()
+
+
+@pytest.fixture
+async def client():
+    """Фикстура HTTP-клиента, который автоматически следует за редиректами."""
+    transport = ASGITransport(app=app)
+    # follow_redirects=True решает проблему 307 кода при обращении к /requests вместо /requests/
+    async with AsyncClient(transport=transport, base_url="http://test", follow_redirects=True) as c:
+        yield c
