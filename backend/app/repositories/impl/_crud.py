@@ -69,3 +69,20 @@ class _RequestCrudRepo:
             return None
 
         return RequestRecord(**{k: row[k] for k in RequestRecord.__dataclass_fields__})
+
+    async def update_status(self, request_id: str, new_status: str) -> Optional[RequestRecord]:
+        """Обновить статус заявки. Возвращает обновленную запись или None."""
+        row = await self._conn.fetchrow(
+            """
+            UPDATE requests 
+            SET status = $2::request_status 
+            WHERE id = $1 
+            RETURNING id::text, title, description, status::text, category_id, assignee_id, created_at
+            """,
+            request_id,
+            new_status,
+        )
+        if not row:
+            return None
+        
+        return RequestRecord(**{k: row[k] for k in RequestRecord.__dataclass_fields__})

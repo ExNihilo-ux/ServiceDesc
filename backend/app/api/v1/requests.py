@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.core.database import DatabaseManager, get_db_manager
 from app.repositories.request_repository import RequestRepository
-from app.schemas.requests import CreateRequestDTO, SearchRequestDTO, RequestResponseDTO
+from app.schemas.requests import CreateRequestDTO, SearchRequestDTO, RequestResponseDTO, UpdateRequestDTO
 
 router = APIRouter(prefix="/requests", tags=["Requests"])
 
@@ -80,3 +80,29 @@ async def search_requests(
             limit=dto.limit,
         )
         return results
+
+# backend/app/api/v1/requests.py (импортируй UpdateRequestDTO и добавь роут)
+
+@router.patch("/{request_id}")
+async def update_request_status(
+    request_id: UUID,
+    dto: UpdateRequestDTO,
+    db: DatabaseManager = Depends(get_db),
+):
+    """Обновить статус заявки."""
+    async with db.connection() as conn:
+        repo = RequestRepository(conn)
+        record = await repo.update_status(str(request_id), dto.status)
+
+        if not record:
+            raise HTTPException(status_code=404, detail="Request not found")
+
+        return RequestResponseDTO(
+            id=record.id,
+            title=record.title,
+            description=record.description,
+            status=record.status,
+            category_id=record.category_id,
+            assignee_id=record.assignee_id,
+            created_at=record.created_at,
+        )
