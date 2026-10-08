@@ -10,8 +10,8 @@ import sys
 from pathlib import Path
 
 BASE_DIR = Path(__file__).parent.parent
-SQL_UP_DIR = BASE_DIR / "sql" / "migrations"     # UP-скрипты
-SQL_DOWN_DIR = BASE_DIR / "sql" / "rollbacks"    # DOWN-скрипты
+SQL_UP_DIR = BASE_DIR / "sql" / "migrations"
+SQL_DOWN_DIR = BASE_DIR / "sql" / "rollbacks"
 ALEMBIC_VERSIONS = BASE_DIR / "alembic" / "versions"
 
 
