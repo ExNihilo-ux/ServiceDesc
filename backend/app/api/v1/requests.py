@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException
 
 from app.core.database import db
 from app.repositories.request_repository import RequestRepository
-from app.schemas.request_schemas import CreateRequestDTO
+from app.schemas.requests import CreateRequestDTO, SearchRequestDTO
 
 router = APIRouter(prefix="/requests", tags=["Requests"])
 
@@ -28,3 +28,14 @@ async def create_request(dto: CreateRequestDTO):
             }
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
+
+@router.post("/search")
+async def search_requests(dto: SearchRequestDTO):
+    async with db.connection() as conn:
+        repo = RequestRepository(conn)
+        results = await repo.find_similar(
+            embedding=dto.embedding,
+            threshold=dto.threshold,
+            limit=dto.limit,
+        )
+        return results
