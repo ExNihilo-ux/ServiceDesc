@@ -2,7 +2,6 @@
 import pytest
 from httpx import AsyncClient, ASGITransport
 from app.main import app
-from app.core.database import db
 
 
 class TestCreateRequestEndpoint:

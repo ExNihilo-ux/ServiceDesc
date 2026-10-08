@@ -2,26 +2,39 @@
 import os
 import pytest
 import asyncpg
-from dotenv import load_dotenv
 
-load_dotenv()
-
-
-def _get_db_url():
-    return (
-        f"postgresql://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}"
-        f"@{os.getenv('POSTGRES_HOST', 'localhost')}:{os.getenv('POSTGRES_PORT', '5432')}"
-        f"/{os.getenv('POSTGRES_DB')}"
-    )
+from app.settings.database import DatabaseSettings
 
 
 @pytest.fixture
 async def conn():
-    """Новый пул + соединение + транзакция для КАЖДОГО теста.
+    """Новый пул + соединение + транзакция для КАЖДОГО интеграционного теста.
     
-    Никаких session-scoped фикстур — нет конфликтов event loop.
+    Явно читает POSTGRES_* переменные окружения для создания настроек.
+    Гарантирует работу независимо от расположения .env файла.
     """
-    pool = await asyncpg.create_pool(dsn=_get_db_url(), min_size=1, max_size=1)
+    settings = DatabaseSettings(
+        user=os.getenv("POSTGRES_USER"),
+        password=os.getenv("POSTGRES_PASSWORD"),
+        database=os.getenv("POSTGRES_DB"),
+        host=os.getenv("POSTGRES_HOST", "localhost"),
+        port=int(os.getenv("POSTGRES_PORT", "5432")),
+        min_size=1,
+        max_size=1,
+        statement_timeout="30s",
+        application_name="test-backend",
+    )
+    
+    pool = await asyncpg.create_pool(
+        user=settings.user,
+        password=settings.password,
+        database=settings.database,
+        host=settings.host,
+        port=settings.port,
+        min_size=settings.min_size,
+        max_size=settings.max_size,
+    )
+    
     async with pool.acquire() as connection:
         await connection.execute("BEGIN")
         try:
@@ -34,4 +47,5 @@ async def conn():
             yield connection
         finally:
             await connection.execute("ROLLBACK")
+    
     await pool.close()

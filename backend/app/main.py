@@ -4,12 +4,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.api.v1.requests import router as requests_router
-from app.core.database import db
+from app.core.database import get_db_manager
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Управление жизненным циклом приложения (startup/shutdown)."""
+    db = get_db_manager()
     await db.init_pool()
     yield
     await db.close_pool()

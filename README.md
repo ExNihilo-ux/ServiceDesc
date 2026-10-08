@@ -15,8 +15,8 @@
 
 ```text
 ServiceDesc/
-├── .env                    # Конфигурация
-── .env.example             # Шаблон конфигурации
+── .env                    # Конфигурация окружения (не коммитить!)
+├── .env.example            # Шаблон конфигурации
 ├── alembic.ini             # Конфиг Alembic для миграций БД
 ├── docker-compose.yml      # Оркестрация всех сервисов
 ├── pyproject.toml          # Зависимости бэкенда, конфиг pytest
@@ -24,19 +24,19 @@ ServiceDesc/
 │
 ├── backend/                # Python-бэкенд (FastAPI + asyncpg)
 │   ├── app/
-│   │   ├── core/           # Инфраструктура (config.py, database.py)
-│   │   ├── models/         # SQLAlchemy модели / Dataclasses
+│   │   ├── api/v1/         # Роутеры FastAPI, Dependency Injection
+│   │   ├── core/           # Инфраструктура (database.py, утилиты)
 │   │   ├── repositories/   # Слой данных (Raw SQL, request_repository.py)
-│   │   ├── schemas/        # Pydantic DTO (base.py, types.py, request_schemas.py)
+│   │   ├── schemas/        # Доменные DTO (requests/, types.py)
 │   │   ├── services/       # Бизнес-логика (маршрутизация, ИИ)
-│   │   └── main.py         # Точка входа FastAPI
-│   ├── scripts/            # Утилиты (seed data, one-off jobs)
+│   │   ── settings/       # Типизированная конфигурация (database.py, app.py)
+│   ├── scripts/            # Утилиты (new_migration.py, seed data)
 │   ├── sql/                # Сырые SQL-скрипты, функции, триггеры
 │   └── tests/              # TDD по слоям
-│       ├── conftest.py     # Глобальные фикстуры (db_pool, conn)
-│       ├── e2e/            # HTTP API тесты (test_requests_api.py)
-│       ├── integration/    # Тесты репозиториев (test_request_upsert.py)
-│       └── unit/schemas/   # Unit-тесты валидации (test_embedding_validator.py)
+│       ├── conftest.py     # Глобальные фикстуры (conn для интеграции)
+│       ├── e2e/            # HTTP API тесты (dependency_overrides)
+│       ├── integration/    # Тесты репозиториев (транзакции ROLLBACK)
+│       └── unit/           # Unit-тесты (валидаторы, бизнес-правила)
 │
 ├── mobile/                 # Flutter-приложение для сотрудников
 │   ├── android/            # Нативная конфигурация Android
@@ -48,12 +48,12 @@ ServiceDesc/
 │   ├── assets/             # Ресурсы (иконки, шрифты, изображения)
 │   └── pubspec.yaml        # Зависимости Flutter
 │
-├── web_admin/              # Веб-панель администратора
+── web_admin/              # Веб-панель администратора
 │   ├── app/                # Next.js / React приложение
 │   ├── components/         # UI-компоненты
 │   ├── services/           # API-клиенты, хуки
 │   ├── styles/             # Глобальные стили, Tailwind config
-│   ── package.json        # Зависимости Node.js
+│   └── package.json        # Зависимости Node.js
 │
 ├── docker/                 # Инфраструктура контейнеров
 │   ├── monitoring/         # Prometheus + Grafana стек
@@ -61,7 +61,7 @@ ServiceDesc/
 │   │   └── prometheus.yaml # Конфигурация сбора метрик
 │   ├── nginx/              # Reverse proxy
 │   │   └── default.conf    # Конфигурация проксирования
-│   ── postgres/           # База данных
+│   └── postgres/           # База данных
 │       └── initdb.d/       # Скрипты инициализации БД
 │
 ├── docs/                   # Документация проекта
@@ -75,6 +75,7 @@ ServiceDesc/
         ├── spec.yaml       # OpenAPI 3.0 спецификация
         └── types/          # Общие типы данных
 
+        
 ## 📚 Документация по модулям
 
 Каждый крупный компонент имеет собственный README с детальным описанием архитектуры, запуска и разработки:
