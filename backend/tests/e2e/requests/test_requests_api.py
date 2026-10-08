@@ -1,4 +1,4 @@
-# backend/tests/e2e/test_requests_api.py
+# backend/tests/e2e/requests/test_requests_api.py
 import pytest
 from httpx import AsyncClient, ASGITransport
 from app.main import app
