@@ -42,3 +42,7 @@ class RequestRepository:
     async def find_similar(self, **kwargs) -> list[SimilarRequest]:
         """Найти похожие заявки с помощью векторного поиска (pgvector)."""
         return await self._search.find_similar(**kwargs)
+
+    async def delete_by_id(self, request_id: str) -> bool:
+        """Удалить заявку и связанные с ней данные (каскадно)."""
+        return await self._crud.delete_by_id(request_id)

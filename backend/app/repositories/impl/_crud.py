@@ -86,3 +86,11 @@ class _RequestCrudRepo:
             return None
         
         return RequestRecord(**{k: row[k] for k in RequestRecord.__dataclass_fields__})
+
+    async def delete_by_id(self, request_id: str) -> bool:
+        """Удалить заявку по ID. Возвращает True, если запись была удалена."""
+        result = await self._conn.execute(
+            "DELETE FROM requests WHERE id = $1",
+            request_id
+        )
+        return result.split()[-1] == "1"

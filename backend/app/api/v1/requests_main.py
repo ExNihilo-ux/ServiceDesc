@@ -35,3 +35,18 @@ async def update_request_status(request_id: UUID, dto: UpdateRequestDTO, db = De
         if not record:
             raise HTTPException(status_code=404, detail="Request not found")
         return RequestResponseDTO(**record.__dict__)
+
+@router.delete("/{request_id}", status_code=204)
+async def delete_request(
+    request_id: UUID,
+    db = Depends(get_db),
+):
+    """Удалить заявку по ID. Возвращает 204 No Content при успехе."""
+    async with db.connection() as conn:
+        repo = RequestRepository(conn)
+        is_deleted = await repo.delete_by_id(str(request_id))
+
+        if not is_deleted:
+            raise HTTPException(status_code=404, detail="Request not found")
+        
+        return None
